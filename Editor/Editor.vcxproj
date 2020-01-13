@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -22,37 +22,38 @@
     <ProjectGuid>{BF0C14F0-DF19-4448-9796-65B0D8DD996F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Editor</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -77,7 +78,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>$(ProjectDir)\lib\$(PlatformTarget);$(LibraryPath);$(OutDir)</LibraryPath>
-    <IncludePath>$(SolutionDir)VolumeRenderer;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Project_libraries\eigen\eigen-eigen-323c052e1731;$(SolutionDir)VolumeRenderer;$(ProjectDir)include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -87,7 +88,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>$(ProjectDir)\lib\$(PlatformTarget);$(LibraryPath);$(OutDir)</LibraryPath>
-    <IncludePath>$(SolutionDir)VolumeRenderer;$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\Project_libraries\eigen\eigen-eigen-323c052e1731;$(SolutionDir)VolumeRenderer;$(ProjectDir)include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -118,12 +119,14 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>D:\[2020] Seminar\VR\gdcm\vs_build\Source\Common;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\Common;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\DataStructureAndEncodingDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\MediaStorageAndFileFormat;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\InformationObjectDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\MessageExchangeDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\DataDictionary;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Utilities;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;SDL2.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart.lib;opengl32.lib;SDL2.lib;glew32.lib;gdcmCommon.lib;gdcmDICT.lib;gdcmIOD.lib;gdcmMSFF.lib;gdcmcharls.lib;gdcmDSED.lib;gdcmexpat.lib;gdcmgetopt.lib;gdcmjpeg8.lib;gdcmjpeg12.lib;gdcmjpeg16.lib;gdcmMEXD.lib;gdcmopenjp2.lib;gdcmzlib.lib;socketxx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\[2020] Seminar\VR\gdcm\vs_build\bin\Debug;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /E "$(ProjectDir)lib\$(PlatformTarget)" "$(OutDir)" </Command>
@@ -169,13 +172,15 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Utilities;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\DataDictionary;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\MessageExchangeDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\InformationObjectDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\MediaStorageAndFileFormat;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\DataStructureAndEncodingDefinition;D:\[2020] Seminar\VR\gdcm\gdcm-3.0.0\Source\Common;D:\[2020] Seminar\VR\gdcm\vs_build\Source\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;SDL2.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;SDL2.lib;glew32.lib;gdcmCommon.lib;gdcmDICT.lib;gdcmIOD.lib;gdcmMSFF.lib;gdcmcharls.lib;gdcmDSED.lib;gdcmexpat.lib;gdcmgetopt.lib;gdcmjpeg8.lib;gdcmjpeg12.lib;gdcmjpeg16.lib;gdcmMEXD.lib;gdcmopenjp2.lib;gdcmzlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\[2020] Seminar\VR\gdcm\vs_build\bin\Release</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /E "$(ProjectDir)lib\$(PlatformTarget)" "$(OutDir)" </Command>
@@ -194,6 +199,11 @@
     <ClInclude Include="include\imgui\stb_rect_pack.h" />
     <ClInclude Include="include\imgui\stb_textedit.h" />
     <ClInclude Include="include\imgui\stb_truetype.h" />
+    <ClInclude Include="Octree.h" />
+    <CudaCompile Include="test.cuh">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </CudaCompile>
+    <ClInclude Include="volume.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
@@ -202,8 +212,16 @@
     <ClCompile Include="include\imgui\imgui_demo.cpp" />
     <ClCompile Include="include\imgui\imgui_draw.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="volume.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="test.cu">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </CudaCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.targets" />
   </ImportGroup>
 </Project>
