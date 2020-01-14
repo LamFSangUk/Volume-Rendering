@@ -191,6 +191,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ArcBall.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="imgui_impl_sdl_gl3.h" />
     <ClInclude Include="include\imgui\imconfig.h" />
@@ -206,6 +207,7 @@
     <ClInclude Include="volume.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ArcBall.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="imgui_impl_sdl_gl3.cpp" />
     <ClCompile Include="include\imgui\imgui.cpp" />

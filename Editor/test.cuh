@@ -8,8 +8,9 @@
 #define GLM_FORCE_CUDA
 #include <glm/glm.hpp>
 
-__global__ void sum(float* d_vol, unsigned char *d_screen, int width, int height, int depth,
-	float screen_x, float screen_y, float delta_x, float delta_y,
+__global__ void render(float* d_vol, unsigned char *d_screen, int width, int height, int depth,
+	glm::vec3 scr_start_corner, glm::vec3 scr_delta_x, glm::vec3 scr_delta_y,
 	glm::vec4 ray_dir);
 
-int rayCastCuda(int a, int b, unsigned char *h_screen);
+int rayCastCuda(vdcm::Volume* vol,  glm::vec3 scr_center,
+	glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, int a, int b, unsigned char *h_screen);

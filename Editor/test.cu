@@ -14,10 +14,10 @@ __device__ float getIntensity(int16_t* d_vol, int width, int height, int depth,
 	float val = d_vol[(int)floor(z) * width * height + (int)floor(y)* width + (int)floor(x)];
 	
 
+	// TODO: global variables are always zero. Why?
+	//printf("%d %d\n", window_level, window_width);
 	float window_min = 50 - 350 / 2;
 	float window_max = 50 + 350 / 2;
-	//printf("%f\n", window_min);
-
 
 	if (val < window_min) val = window_min;
 	if (val > window_max) val = window_max;
@@ -59,9 +59,6 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 	glm::vec4 bounds[2];
 	bounds[0] = min_bound; bounds[1] = max_bound;
 
-	//printf("orogin: %f %f %f\n", origin.x(), origin.y(), origin.z());
-
-
 	float t;
 	bool is_intersect = intersect(origin, dir, bounds, t);
 
@@ -70,14 +67,12 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 		glm::vec4 color(0, 0, 0, 255);
 		return color;
 	}
-	//printf("Intersect!\n");
+	
 	float max_val = 0.0f;
-	// TODO: Sampling from start to end
+
+	// Sampling from start to end
 	glm::vec4 cur = origin + dir * t;
 
-	/*printf("origin: %f %f %f\n", origin.x(), origin.y(), origin.z());
-	printf("dir: %f %f %f %f\n", dir.x(), dir.y(), dir.z(), t);
-	printf("start: %f %f %f\n", cur.x(), cur.y(), cur.z());*/
 	while (true) {
 		// Terminate condition
 		if (cur.x > max_bound.x || cur.x < min_bound.x
@@ -89,7 +84,6 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 		float x = cur.x + width / 2.f;
 		float y = cur.y + height / 2.f;
 		float z = cur.z + depth / 2.f;
-		//printf("real: %f %f %f\n", x, y, z);
 
 		if (x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= depth) {
 			// Ray go
@@ -98,13 +92,10 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 			cur.z += dir.z;
 			continue;
 		}
-		/*printf("moved: %f %f %f\n", cur.x(), cur.y(), cur.z());
-		printf("real: %f %f %f\n", x, y, z);*/
 
-		// Interpolate with x, y, z
 		float val = getIntensity(d_vol, width, height, depth, x, y, z);
 		if (max_val < val) max_val = val;
-		// printf("%f\n", max_val);
+
 		// Ray go
 		cur.x += dir.x;
 		cur.y += dir.y;
@@ -116,18 +107,16 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 	return color;
 }
 
-__global__ void sum(int16_t* d_vol, unsigned char *d_screen, int width, int height, int depth,
-	float screen_x, float screen_y, float delta_x, float delta_y,
-	glm::vec4 ray_dir) {
-	//int tid = blockIdx.x * blockDim.x + threadIdx.x;
+__global__ void render(int16_t* d_vol, unsigned char *d_screen, int width, int height, int depth,
+	glm::vec3 scr_corner, glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, glm::vec4 ray_dir) {
+
 	int idx_x = blockDim.x * blockIdx.x + threadIdx.x;
 	int idx_y = blockDim.y * blockIdx.y + threadIdx.y;
 	int idx = idx_y * 1000 * 4 + idx_x * 4;	// 1000 means width, 4 means channel
 
-	float cur_x = screen_x + delta_x * idx_x;
-	float cur_y = screen_y + delta_y * idx_y;
+	glm::vec3 cur = scr_corner + (float)idx_x * scr_delta_x + (float)idx_y * scr_delta_y;
 
-	glm::vec4 origin(cur_x, cur_y, 500, 1);
+	glm::vec4 origin(cur, 1);
 	glm::vec4 color = rayCast(d_vol, origin, ray_dir, width, height, depth);
 
 	d_screen[idx + 0] = color.x;
@@ -136,15 +125,17 @@ __global__ void sum(int16_t* d_vol, unsigned char *d_screen, int width, int heig
 	d_screen[idx + 3] = color.w;
 }
 
-int rayCastCuda(int scr_width, int scr_height, unsigned char *h_screen) {
-	vdcm::Volume* vol = vdcm::read("D:/AnnotationProject/MedView/MedView/dicom_ct_sample");
+int rayCastCuda(vdcm::Volume* vol, glm::vec3 scr_center, 
+		glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, int scr_width, int scr_height, unsigned char *h_screen) {
 	//float *raw_data = vol->getBuffer();
 	std::vector<std::vector<int16_t> > *raw_data = &(vol->m_volume_data);
 	printf("Get volume\n");
 
-	window_level = std::get<0>(vol->getDefaultWindowing());
+	int wl = std::get<0>(vol->getDefaultWindowing());
 	window_width = std::get<1>(vol->getDefaultWindowing());
-	printf("%d %d\n", window_level, window_width);
+	printf("%d %d\n", wl, window_width);
+
+	cudaMemcpyToSymbol(&window_level, &wl, sizeof(int),0, cudaMemcpyHostToDevice);
 
 	int width = vol->getWidth();
 	int height = vol->getHeight();
@@ -154,6 +145,7 @@ int rayCastCuda(int scr_width, int scr_height, unsigned char *h_screen) {
 	cudaMalloc((void**)&d_screen, sizeof(unsigned char) * scr_width * scr_height * 4);
 	cudaMemcpy(d_screen, h_screen, sizeof(unsigned char) * scr_width * scr_height * 4, cudaMemcpyHostToDevice);
 
+	// Allocate volume data in gpu.
 	int16_t *d_vol;
 	cudaMalloc((void**)&d_vol, sizeof(int16_t) * width * height * depth);
 
@@ -171,23 +163,21 @@ int rayCastCuda(int scr_width, int scr_height, unsigned char *h_screen) {
 	dim3 block_size(16, 16, 1);
 	dim3 numBlocks(scr_width / block_size.x, scr_height / block_size.y);
 
-	glm::vec4 screen_center(0, 0, 500, 1);
 	glm::vec4 volume_center(0, 0, 0, 1);
 	glm::vec4 direction;
-	float screen_x, screen_y; // Start point left bottom
-	float delta_x = 1.f, delta_y = 1.f;
-	screen_x = screen_center.x - scr_width * delta_x / 2.f;
-	screen_y = screen_center.y - scr_height * delta_y / 2.f;
+	glm::vec3 scr_start_corner;		// Start point left bottom
 
+	scr_start_corner = scr_center - (scr_width / 2.f) * scr_delta_x - (scr_height / 2.f) * scr_delta_y;
 	// Assume that only consider parallel ray
-	direction = volume_center - screen_center;
+	direction = volume_center - glm::vec4(scr_center, 1.);
 	direction = glm::normalize(direction);
 
-	sum << <numBlocks, block_size >> > (d_vol, d_screen, width, height, depth, screen_x, screen_y, delta_x, delta_y, direction);
+	render << <numBlocks, block_size >> > (d_vol, d_screen, width, height, depth, scr_start_corner, scr_delta_x, scr_delta_y, direction);
 
 	cudaMemcpy(h_screen, d_screen, sizeof(unsigned char) * scr_width * scr_height * 4, cudaMemcpyDeviceToHost);
 
 	cudaFree(d_screen);
+	cudaFree(d_vol);
 
 	return true;
 }

@@ -5,6 +5,9 @@
 #include <SDL\SDL.h>
 #include <chrono>
 
+#include "volume.h"
+#include "ArcBall.h"
+
 #undef main // undef to remove sdl_main
 
 #pragma once
@@ -25,6 +28,7 @@ private:
 	// SDL event related functions
 	void OnResize(uint32_t width, uint32_t height);
 	void HandleSDLEvent(SDL_Event* event);
+
 	// SDL & window
 	SDL_Window* m_window;
 	SDL_GLContext m_context;
@@ -34,5 +38,18 @@ private:
 	// Output texture
 	bool m_hasTexture;
 	GLuint m_textureID;
+
+	// Volume
+	vdcm::Volume* m_vol;
+
+	// Screen
+	glm::vec3 m_screen_center;
+	glm::vec3 m_screen_delta_x;
+	glm::vec3 m_screen_delta_y;
+
+	// Arcball
+	ArcBall* m_arcball;
+
+	bool m_is_right_pressed = false;
 };
 

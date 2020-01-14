@@ -48,6 +48,17 @@ bool Editor::Initialize() {
 	SDL_GLContext glcontext = SDL_GL_CreateContext(m_window);
 	glewInit();
 
+	// Load Volume
+	m_vol = vdcm::read("D:/AnnotationProject/MedView/MedView/dicom_ct_sample");
+
+	// Set default Screen
+	m_screen_center = glm::vec3(0, 0, 500);
+	m_screen_delta_x = glm::vec3(1, 0, 0);
+	m_screen_delta_y = glm::vec3(0, 1, 0);
+
+	// Create Arcball
+	m_arcball = new ArcBall(720, m_height);
+
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(m_window);
 	Process();
@@ -100,146 +111,22 @@ void Editor::UpdateTexture(const void * buffer, int width, int height) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-//bool intersect(Eigen::Vector4f origin, Eigen::Vector4f dir, 
-//		Eigen::Vector4f* bounds, float &t) {
-//	Eigen::Vector4f inv_dir(1. / dir[0], 1. / dir[1], 1. / dir[2], 0.);
-//
-//	double t1 = (bounds[0][0] - origin[0])*inv_dir[0];
-//	double t2 = (bounds[1][0] - origin[0])*inv_dir[0];
-//
-//	double tmin = min(t1, t2);
-//	double tmax = max(t1, t2);
-//
-//	for (int i = 1; i < 3; ++i) {
-//		t1 = (bounds[0][i] - origin[i])*inv_dir[i];
-//		t2 = (bounds[1][i] - origin[i])*inv_dir[i];
-//
-//		tmin = max(tmin, min(t1, t2));
-//		tmax = min(tmax, max(t1, t2));
-//	}
-//
-//	t = tmin;
-//
-//	return tmax > max(tmin, 0.0);
-//}
-//
-//// Raycast into the volume
-//Eigen::Vector4f RayCast(Eigen::Vector4f origin, Eigen::Vector4f dir, vdcm::Volume* vol, int width, int height, int depth) {
-//	// Find start and end points.
-//	Eigen::Vector4f start, end, min_bound, max_bound;
-//	min_bound = Eigen::Vector4f(-width / 2.f, -height / 2.f, -depth / 2.f, 1);
-//	max_bound = Eigen::Vector4f(width / 2.f, height / 2.f, depth / 2.f, 1);
-//
-//	Eigen::Vector4f bounds[2];
-//	bounds[0] = min_bound; bounds[1] = max_bound;
-//
-//	//printf("orogin: %f %f %f\n", origin.x(), origin.y(), origin.z());
-//
-//
-//	float t;
-//	bool is_intersect = intersect(origin, dir, bounds, t);
-//
-//	if (!is_intersect) {
-//		// RGBA color
-//		Eigen::Vector4f color(0, 0, 0, 255);
-//		return color;
-//	}
-//	//printf("Intersect!\n");
-//	float max_val = 0.0f;
-//	// TODO: Sampling from start to end
-//	Eigen::Vector4f cur = origin + dir * t;
-//
-//	/*printf("origin: %f %f %f\n", origin.x(), origin.y(), origin.z());
-//	printf("dir: %f %f %f %f\n", dir.x(), dir.y(), dir.z(), t);
-//	printf("start: %f %f %f\n", cur.x(), cur.y(), cur.z());*/
-//	while (true) {
-//		// Terminate condition
-//		if (cur.x() > max_bound.x() || cur.x() < min_bound.x()
-//			|| cur.y() > max_bound.y() || cur.y() < min_bound.y()
-//			|| cur.z() > max_bound.z() || cur.z() < min_bound.z())
-//			break;
-//
-//		// Get origin coordinates
-//		float x = cur.x() + width / 2.f;
-//		float y = cur.y() + height / 2.f;
-//		float z = cur.z() + depth / 2.f;
-//		//printf("real: %f %f %f\n", x, y, z);
-//
-//		if (x < 0 || y < 0 || z < 0 || x >= width || y >= height || z >= depth) {
-//			// Ray go
-//			cur.x() += dir.x();
-//			cur.y() += dir.y();
-//			cur.z() += dir.z();
-//			continue;
-//		}
-//		/*printf("moved: %f %f %f\n", cur.x(), cur.y(), cur.z());
-//		printf("real: %f %f %f\n", x, y, z);*/
-//
-//		// Interpolate with x, y, z
-//		//float val = vol_data[(int)floor(z) * width * height + (int)floor(y) * width + (int)floor(x)];
-//		float val = vol->getIntensity(x,y,z);
-//		if (max_val < val) max_val = val;
-//		// printf("%f\n", max_val);
-//		// Ray go
-//		cur.x() += dir.x();
-//		cur.y() += dir.y();
-//		cur.z() += dir.z();
-//	}
-//
-//	// RGBA color
-//	Eigen::Vector4f color(max_val*255,0,0,255);
-//	return color;
-//}
-
 void Editor::Process() {
 
 	/* TODO : Process volume data & pass raw buffer to UpdateTexture method*/
-	//vdcm::Volume* vol = vdcm::read("D:/AnnotationProject/MedView/MedView/dicom_ct_sample");
-
 
 	// Screen
 	unsigned char* screen = new unsigned char[m_width * m_height * 4];
-	//Eigen::Vector4f screen_center(0, 0, 500, 1);
-	//Eigen::Vector4f volume_center(0, 0, 0, 1);
 
-	///* Temporal Camera pos and Screen pos */
-	//Eigen::Vector4f direction;
-	//float screen_x, screen_y;	// Start point left bottom
-	//float delta_x, delta_y; 
-	//delta_x = 1.f;
-	//delta_y = 1.f;
-	//screen_x = screen_center.x() - m_width * delta_x / 2.f;
-	//screen_y = screen_center.y() - m_height * delta_y / 2.f;
+	glm::mat4 rot_m = m_arcball->getRotationMatrix();
+	m_screen_center = glm::vec4(m_screen_center, 1) * rot_m;
 
-	rayCastCuda(m_width, m_height, screen);
+	m_screen_delta_x = glm::vec4(m_screen_delta_x, 1) * rot_m;
+	m_screen_delta_y = glm::vec4(m_screen_delta_y, 1) * rot_m;
 
-	// Assume that only consider parallel ray
-	//direction = volume_center - screen_center;
-	//direction.normalize();
-
-	float cur_x, cur_y;
-	int idx = 0;
-
-	// CPU Raycasting
-	//for (int y = 0; y < m_height; y++) {
-
-	//	for (int x = 0; x < m_width; x++) {
-	//		//printf("cur: %f %f\n", cur_x, cur_y);
-
-	//		// TODO: replace with octree data
-	//		cur_x = screen_x + delta_x * x;
-	//		cur_y = screen_y + delta_y * y;
-	//		Eigen::Vector4f origin(cur_x, cur_y, screen_center.z(), 1);
-	//		Eigen::Vector4f color = RayCast(origin, direction, vol, width, height, depth);
-
-	//		screen[idx + 0] = color.x();
-	//		screen[idx + 1] = color.y();
-	//		screen[idx + 2] = color.z();
-	//		screen[idx + 3] = color.w();
-
-	//		idx += 4;
-	//	}
-	//}
+	rayCastCuda(m_vol, 
+		m_screen_center, m_screen_delta_x, m_screen_delta_y, 
+		m_width, m_height, screen);
 
 	UpdateTexture(screen, m_width, m_height);
 
@@ -287,10 +174,25 @@ void Editor::HandleSDLEvent(SDL_Event * event) {
 	case SDL_MOUSEWHEEL:
 		break;
 	case SDL_MOUSEMOTION:
+		if (m_is_right_pressed && event->motion.x >= (1000-720)) {
+			printf("%d %d\n", event->motion.x - (1000 - 720), event->motion.y);
+
+			m_arcball->rotate(event->motion.x - (1000-720), event->motion.y);
+			Process();
+		}
 		break;
 	case SDL_MOUSEBUTTONDOWN:
+		if (event->button.button == SDL_BUTTON_RIGHT) {
+			m_is_right_pressed = true;
+
+			printf("%d %d\n", event->button.x - (1000 - 720), event->button.y);
+			m_arcball->setStart(event->button.x - (1000 - 720), event->button.y);
+		}
 		break;
 	case SDL_MOUSEBUTTONUP:
+		if (event->button.button == SDL_BUTTON_RIGHT) {
+			m_is_right_pressed = false;
+		}
 		mouseIsDown = false;
 		break;
 	case SDL_WINDOWEVENT:
