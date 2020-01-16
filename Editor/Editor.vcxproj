@@ -127,6 +127,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>cuda.lib;cudart.lib;opengl32.lib;SDL2.lib;glew32.lib;gdcmCommon.lib;gdcmDICT.lib;gdcmIOD.lib;gdcmMSFF.lib;gdcmcharls.lib;gdcmDSED.lib;gdcmexpat.lib;gdcmgetopt.lib;gdcmjpeg8.lib;gdcmjpeg12.lib;gdcmjpeg16.lib;gdcmMEXD.lib;gdcmopenjp2.lib;gdcmzlib.lib;socketxx.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\[2020] Seminar\VR\gdcm\vs_build\bin\Debug;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <HeapReserveSize>1024000000</HeapReserveSize>
+      <StackReserveSize>1024000000</StackReserveSize>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /E "$(ProjectDir)lib\$(PlatformTarget)" "$(OutDir)" </Command>

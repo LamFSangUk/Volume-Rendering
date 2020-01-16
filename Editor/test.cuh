@@ -1,5 +1,6 @@
 #pragma once
 #include "volume.h"
+#include "Octree.h"
 
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -14,3 +15,7 @@ __global__ void render(float* d_vol, unsigned char *d_screen, int width, int hei
 
 int rayCastCuda(vdcm::Volume* vol,  glm::vec3 scr_center,
 	glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, int a, int b, unsigned char *h_screen);
+
+void copyVolCuda(vdcm::Volume* vol);
+void copyOctree(Octree *);
+void allocateScreenCuda(int, int);

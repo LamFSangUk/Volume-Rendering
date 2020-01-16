@@ -48,8 +48,14 @@ bool Editor::Initialize() {
 	SDL_GLContext glcontext = SDL_GL_CreateContext(m_window);
 	glewInit();
 
+	allocateScreenCuda(1000, 720);
+
 	// Load Volume
 	m_vol = vdcm::read("D:/AnnotationProject/MedView/MedView/dicom_ct_sample");
+	copyVolCuda(m_vol);
+	tree= new Octree(&(m_vol->m_volume_data), m_vol->getWidth(), m_vol->getHeight(), m_vol->getDepth(), 3);
+	copyOctree(tree);
+	printf("Octree build\n");
 
 	// Set default Screen
 	m_screen_center = glm::vec3(0, 0, 500);
@@ -74,6 +80,7 @@ void Editor::Run() {
 			ImGui_ImplSdlGL3_ProcessEvent(&event);
 			HandleSDLEvent(&event);
 		}
+
 		ImGui_ImplSdlGL3_NewFrame(m_window);
 		// Editor
 		{

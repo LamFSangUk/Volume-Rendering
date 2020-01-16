@@ -6,7 +6,10 @@
 
 using namespace std;
 
-__device__ int window_level;
+unsigned char *d_screen;
+int16_t *d_vol;
+OctreeNode* d_octree;
+__device__ __constant__ int window_level = 45;
 __device__ int window_width;
 
 __device__ float getIntensity(int16_t* d_vol, int width, int height, int depth, 
@@ -103,7 +106,7 @@ __device__ glm::vec4 rayCast(int16_t* d_vol, glm::vec4 origin, glm::vec4 dir, in
 	}
 
 	// RGBA color
-	glm::vec4 color(max_val * 255, 0, 0, 255);
+	glm::vec4 color(max_val * 255, max_val * 255, max_val * 255, 255);
 	return color;
 }
 
@@ -125,28 +128,21 @@ __global__ void render(int16_t* d_vol, unsigned char *d_screen, int width, int h
 	d_screen[idx + 3] = color.w;
 }
 
-int rayCastCuda(vdcm::Volume* vol, glm::vec3 scr_center, 
-		glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, int scr_width, int scr_height, unsigned char *h_screen) {
-	//float *raw_data = vol->getBuffer();
+void allocateScreenCuda(int scr_width, int scr_height) {
+	cudaError_t rc = cudaMalloc((void**)&d_screen, sizeof(unsigned char) * scr_width * scr_height * 4);
+	if (rc != cudaSuccess)
+		printf("Could not allocate memory: %d\n", rc);
+}
+
+void copyVolCuda(vdcm::Volume* vol) {
 	std::vector<std::vector<int16_t> > *raw_data = &(vol->m_volume_data);
-	printf("Get volume\n");
-
-	int wl = std::get<0>(vol->getDefaultWindowing());
-	window_width = std::get<1>(vol->getDefaultWindowing());
-	printf("%d %d\n", wl, window_width);
-
-	cudaMemcpyToSymbol(&window_level, &wl, sizeof(int),0, cudaMemcpyHostToDevice);
 
 	int width = vol->getWidth();
 	int height = vol->getHeight();
 	int depth = vol->getDepth();
 
-	unsigned char *d_screen;
-	cudaMalloc((void**)&d_screen, sizeof(unsigned char) * scr_width * scr_height * 4);
-	cudaMemcpy(d_screen, h_screen, sizeof(unsigned char) * scr_width * scr_height * 4, cudaMemcpyHostToDevice);
-
 	// Allocate volume data in gpu.
-	int16_t *d_vol;
+	
 	cudaMalloc((void**)&d_vol, sizeof(int16_t) * width * height * depth);
 
 	int16_t *dst = d_vol;
@@ -158,7 +154,32 @@ int rayCastCuda(vdcm::Volume* vol, glm::vec3 scr_center,
 		cudaMemcpy(dst, src, sizeof(int16_t)*sz, cudaMemcpyHostToDevice);
 		dst += sz;
 	}
+}
 
+void copyOctree(Octree* tree) {
+
+	cudaMalloc((void**)&d_octree, sizeof(OctreeNode) * tree->size);
+	cudaMemcpy(d_octree, tree->root, sizeof(OctreeNode)*tree->size, cudaMemcpyHostToDevice);
+}
+
+int rayCastCuda(vdcm::Volume* vol, glm::vec3 scr_center, 
+		glm::vec3 scr_delta_x, glm::vec3 scr_delta_y, int scr_width, int scr_height, unsigned char *h_screen) {
+	//float *raw_data = vol->getBuffer();
+	//allocateScreenCuda(scr_width, scr_height);
+	//copyVolCuda(vol);
+
+	//printf("Get volume\n");
+
+	int wl = std::get<0>(vol->getDefaultWindowing());
+	window_width = std::get<1>(vol->getDefaultWindowing());
+	printf("%d %d\n", wl, window_width);
+
+	//cudaMalloc((void**)&window_level, sizeof(int));
+	cudaMemcpyToSymbol(&window_level, &wl, sizeof(int),0,cudaMemcpyHostToDevice);
+
+	int width = vol->getWidth();
+	int height = vol->getHeight();
+	int depth = vol->getDepth();	
 
 	dim3 block_size(16, 16, 1);
 	dim3 numBlocks(scr_width / block_size.x, scr_height / block_size.y);
@@ -173,11 +194,11 @@ int rayCastCuda(vdcm::Volume* vol, glm::vec3 scr_center,
 	direction = glm::normalize(direction);
 
 	render << <numBlocks, block_size >> > (d_vol, d_screen, width, height, depth, scr_start_corner, scr_delta_x, scr_delta_y, direction);
+	cudaStreamSynchronize(0);
 
 	cudaMemcpy(h_screen, d_screen, sizeof(unsigned char) * scr_width * scr_height * 4, cudaMemcpyDeviceToHost);
 
-	cudaFree(d_screen);
-	cudaFree(d_vol);
-
+	//cudaFree(d_screen);
+	//cudaFree(d_vol);
 	return true;
 }

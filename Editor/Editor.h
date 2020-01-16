@@ -7,6 +7,7 @@
 
 #include "volume.h"
 #include "ArcBall.h"
+#include "Octree.h"
 
 #undef main // undef to remove sdl_main
 
@@ -41,6 +42,9 @@ private:
 
 	// Volume
 	vdcm::Volume* m_vol;
+
+	// Octree
+	Octree* tree;
 
 	// Screen
 	glm::vec3 m_screen_center;
